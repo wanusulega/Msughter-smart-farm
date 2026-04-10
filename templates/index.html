@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Smart Farm Dashboard</title>
+
+<style>
+
+body{
+font-family: Arial;
+background:#f4f6f8;
+margin:40px;
+}
+
+.card{
+background:white;
+padding:25px;
+width:320px;
+border-radius:10px;
+box-shadow:0 4px 10px rgba(0,0,0,0.1);
+}
+
+h1{
+color:#2e7d32;
+}
+
+.good{
+color:green;
+font-weight:bold;
+}
+
+.bad{
+color:red;
+font-weight:bold;
+}
+
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h1>Smart Farm Dashboard</h1>
+
+<p id="moisture"></p>
+<p id="temperature"></p>
+<p id="humidity"></p>
+
+<h2 id="status"></h2>
+
+<canvas id="chart" width="300" height="200"></canvas>
+
+</div>
+
+<script>
+
+    const ctx = document.getElementById('chart').getContext('2d');
+
+let chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: [
+            {
+                label: 'Moisture',
+                data: [],
+                borderWidth: 2
+            },
+            {
+                label: 'Temperature',
+                data: [],
+                borderWidth: 2
+            }
+        ]
+    },
+    options: {
+        animation:false
+    }
+});
+
+async function loadData(){
+
+const response = await fetch('/data');
+const result = await response.json();
+
+document.getElementById("moisture").innerText =
+"Moisture: " + result.data.moisture;
+
+document.getElementById("temperature").innerText =
+"Temperature: " + result.data.temperature;
+
+document.getElementById("humidity").innerText =
+"Humidity: " + result.data.humidity;
+
+document.getElementById("status").innerText =
+result.status;
+
+chart.data.labels.push(new Date().toLocaleTimeString());
+chart.data.datasets[0].data.push(result.data.moisture);
+chart.data.datasets[1].data.push(result.data.temperature);
+
+if(chart.data.labels.length > 10){
+chart.data.labels.shift();
+chart.data.datasets[0].data.shift();
+chart.data.datasets[1].data.shift();
+}
+
+chart.update();
+
+}
+
+if(result.status === "Irrigation needed"){
+document.getElementById("status").className="bad";
+}else{
+document.getElementById("status").className="good";
+}
+
+setInterval(loadData,3000);
+
+</script>
+
+</body>
+</html>
